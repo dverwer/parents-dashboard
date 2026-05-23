@@ -402,7 +402,8 @@
       <input id="new-chore-name" placeholder="New chore name…">
       <input id="new-chore-price" type="number" step="0.25" min="0.25" placeholder="Price ($)">
       <select id="new-chore-kid">
-        <option value="both">Both kids</option>
+        <option value="both">Both — each gets paid</option>
+        <option value="race">Both — race (first one paid)</option>
         <option value="kailey">Kailey only</option>
         <option value="austin">Austin only</option>
       </select>
@@ -629,8 +630,16 @@
           const original = item.choreId.slice('pending-menu-'.length);
           await sbPatch(`chore_log?id=eq.${item.id}`, { chore_id: `menu-${original}` });
           // Auto-deactivate the menu row so the kid can't tap it again today.
-          // Tomorrow the parent re-enables from the library if they want it offered.
           await sbPatch(`chore_menu?id=eq.${original}`, { active: false });
+          // If this was a "race" chore (shared_group_id set), also deactivate
+          // the other kid's matching row — first come, first serve.
+          const menuRow = menu.find(m => m.id === original);
+          if (menuRow && menuRow.shared_group_id) {
+            await sbPatch(
+              `chore_menu?shared_group_id=eq.${menuRow.shared_group_id}&id=neq.${original}`,
+              { active: false }
+            );
+          }
         } else {
           await sbDelete(`chore_log?id=eq.${item.id}`);
         }
@@ -745,8 +754,10 @@
     }
     rows.forEach(r => {
       const tr = document.createElement('tr');
+      const isRace = (r.kailey && r.kailey.shared_group_id) || (r.austin && r.austin.shared_group_id);
+      const raceBadge = isRace ? ' <span class="pill warn" title="First-come-first-serve">race</span>' : '';
       tr.innerHTML = `
-        <td class="chore-name-cell">${r.name}</td>
+        <td class="chore-name-cell">${r.name}${raceBadge}</td>
         <td class="right">$<input type="number" step="0.25" min="0" class="price-edit" value="${(r.price/100).toFixed(2)}"></td>
         <td class="center" data-kid="kailey"></td>
         <td class="center" data-kid="austin"></td>
@@ -831,6 +842,14 @@
         await Promise.all([
           sbPost('chore_menu', { kid: 'kailey', name, price_cents }),
           sbPost('chore_menu', { kid: 'austin', name, price_cents })
+        ]);
+      } else if (kid === 'race') {
+        // Shared "race" chore — same shared_group_id on both rows. When one
+        // kid completes it (approved), the other kid's row auto-deactivates.
+        const sharedId = crypto.randomUUID();
+        await Promise.all([
+          sbPost('chore_menu', { kid: 'kailey', name, price_cents, shared_group_id: sharedId }),
+          sbPost('chore_menu', { kid: 'austin', name, price_cents, shared_group_id: sharedId })
         ]);
       } else {
         await sbPost('chore_menu', { kid, name, price_cents });
