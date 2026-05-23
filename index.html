@@ -397,10 +397,9 @@
   // ============= CONFIG =============
   const SUPABASE_URL  = 'https://gpumiccbztdqsszqplhf.supabase.co';
   const ANON_KEY      = 'sb_publishable_y_qNcwejAfm2Ewexz_KsOQ_3JWX7AuM';
-  // Service key is base64-encoded only to evade GitHub's automated secret-scanning
-  // push protection (which is a false positive for this family-internal app).
-  // Decoded at load time; nothing dynamic here, anyone with the URL can see it.
-  const SECRET_KEY = atob('c2Jfc2VjcmV0X0dVeWNwQWRlN0U3OHhJZTFZZ20zNGdfVnVZWm0zenU=');
+  // No secret key — Supabase forbids sb_secret_* in browsers. Dashboard uses
+  // the publishable (anon) key and relies on permissive RLS policies on
+  // chore_log/chore_menu/unlock_approvals to do writes.
 
   const KIDS = {
     kailey: { name: 'Kailey', rate: 8.00, scooter: 159.00 },
@@ -429,16 +428,15 @@
 
   // ============= API =============
   const sbBase = SUPABASE_URL + '/rest/v1';
-  const anonHeaders   = { apikey: ANON_KEY,   Authorization: `Bearer ${ANON_KEY}` };
-  const secretHeaders = { apikey: SECRET_KEY, Authorization: `Bearer ${SECRET_KEY}` };
+  const anonHeaders = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` };
 
-  async function sbGet(path, useSecret = false) {
-    const r = await fetch(`${sbBase}/${path}`, { headers: useSecret ? secretHeaders : anonHeaders });
+  async function sbGet(path) {
+    const r = await fetch(`${sbBase}/${path}`, { headers: anonHeaders });
     if (!r.ok) throw new Error(`GET ${path} ${r.status}: ${await r.text()}`);
     return r.json();
   }
   async function sbPost(path, body, extraPrefer = '') {
-    const headers = { ...secretHeaders, 'Content-Type': 'application/json',
+    const headers = { ...anonHeaders, 'Content-Type': 'application/json',
       Prefer: 'return=representation' + (extraPrefer ? ',' + extraPrefer : '') };
     const r = await fetch(`${sbBase}/${path}`, { method: 'POST', headers, body: JSON.stringify(body) });
     if (!r.ok) throw new Error(`POST ${path} ${r.status}: ${await r.text()}`);
@@ -447,17 +445,15 @@
   async function sbPatch(path, body) {
     const r = await fetch(`${sbBase}/${path}`, {
       method: 'PATCH',
-      headers: { ...secretHeaders, 'Content-Type': 'application/json' },
+      headers: { ...anonHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
     if (!r.ok) throw new Error(`PATCH ${path} ${r.status}: ${await r.text()}`);
   }
   async function sbDelete(path) {
-    const r = await fetch(`${sbBase}/${path}`, { method: 'DELETE', headers: secretHeaders });
+    const r = await fetch(`${sbBase}/${path}`, { method: 'DELETE', headers: anonHeaders });
     if (!r.ok) throw new Error(`DELETE ${path} ${r.status}: ${await r.text()}`);
   }
-  // Debug helper — call from browser console: dbgKey() to see what's loaded
-  window.dbgKey = () => ({ len: SECRET_KEY.length, head: SECRET_KEY.slice(0,15), tail: SECRET_KEY.slice(-6) });
 
   function setSync(state, text) {
     document.getElementById('syncDot').classList.toggle('offline', state !== 'ok');
