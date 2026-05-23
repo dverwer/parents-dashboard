@@ -106,8 +106,8 @@
   }
   .stat-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
     margin-bottom: 12px;
   }
   .stat-cell {
@@ -328,6 +328,7 @@
       <div class="stat-row">
         <div class="stat-cell"><div class="stat-num" id="kailey-morning">—</div><div class="stat-lbl">Morning</div></div>
         <div class="stat-cell"><div class="stat-num" id="kailey-daytime">—</div><div class="stat-lbl">Daytime</div></div>
+        <div class="stat-cell"><div class="stat-num" id="kailey-evening">—</div><div class="stat-lbl">Evening</div></div>
         <div class="stat-cell"><div class="stat-num" id="kailey-today">$0</div><div class="stat-lbl">Today</div></div>
         <div class="stat-cell"><div class="stat-num" id="kailey-fund">$0</div><div class="stat-lbl">Scooter</div></div>
       </div>
@@ -339,6 +340,7 @@
       <div class="stat-row">
         <div class="stat-cell"><div class="stat-num" id="austin-morning">—</div><div class="stat-lbl">Morning</div></div>
         <div class="stat-cell"><div class="stat-num" id="austin-daytime">—</div><div class="stat-lbl">Daytime</div></div>
+        <div class="stat-cell"><div class="stat-num" id="austin-evening">—</div><div class="stat-lbl">Evening</div></div>
         <div class="stat-cell"><div class="stat-num" id="austin-today">$0</div><div class="stat-lbl">Today</div></div>
         <div class="stat-cell"><div class="stat-num" id="austin-fund">$0</div><div class="stat-lbl">Scooter</div></div>
       </div>
@@ -393,6 +395,7 @@
           <th class="right">Price</th>
           <th class="center">Kailey</th>
           <th class="center">Austin</th>
+          <th class="center" title="First-come-first-serve: only one kid gets paid">Race?</th>
         </tr>
       </thead>
       <tbody id="library-body"></tbody>
@@ -438,6 +441,7 @@
     kailey: ['daytime-lunch','daytime-pets','daytime-cat','daytime-dishes','daytime-clear-dinner'],
     austin: ['daytime-lunch','daytime-walk-spot','daytime-walk-pedro','daytime-feed-spot','daytime-dishes','daytime-clear-dinner']
   };
+  const EVENING_IDS = ['evening-brush','evening-bath','evening-prayers'];
 
   // Day rolls over at 10pm local — match kids' pages
   function todayKey() {
@@ -523,6 +527,7 @@
     const morningDone = MORNING_IDS.filter(id => todayBaseline.some(r => r.chore_id === id)).length;
     const daytimeDone = DAYTIME_IDS[kid].filter(id => todayBaseline.some(r => r.chore_id === id)).length;
     const daytimeTotal = DAYTIME_IDS[kid].length;
+    const eveningDone = EVENING_IDS.filter(id => todayBaseline.some(r => r.chore_id === id)).length;
 
     const todayPaid = todayLog.filter(r => !r.is_baseline);
     const todayEarnedCents = todayPaid
@@ -541,6 +546,7 @@
     return {
       morning: `${morningDone}/${MORNING_IDS.length}`,
       daytime: `${daytimeDone}/${daytimeTotal}`,
+      evening: `${eveningDone}/${EVENING_IDS.length}`,
       today: todayEarnedCents / 100,
       fund: totalScooter,
       pending: todayPendingCount,
@@ -553,6 +559,7 @@
       const s = kidStats(kid);
       document.getElementById(`${kid}-morning`).textContent = s.morning;
       document.getElementById(`${kid}-daytime`).textContent = s.daytime;
+      document.getElementById(`${kid}-evening`).textContent = s.evening;
       document.getElementById(`${kid}-today`).textContent = fmtMoney(s.today);
       document.getElementById(`${kid}-fund`).textContent = fmtMoney(s.fund);
       document.getElementById(`${kid}-bar`).style.width = s.pct.toFixed(1) + '%';
@@ -761,10 +768,24 @@
         <td class="right">$<input type="number" step="0.25" min="0" class="price-edit" value="${(r.price/100).toFixed(2)}"></td>
         <td class="center" data-kid="kailey"></td>
         <td class="center" data-kid="austin"></td>
+        <td class="center" data-race></td>
       `;
       const priceInput = tr.querySelector('.price-edit');
       priceInput.addEventListener('change', () => updateChorePrice(r, priceInput));
       priceInput.addEventListener('keydown', e => { if (e.key === 'Enter') priceInput.blur(); });
+
+      // Race toggle — only meaningful when both kid variants exist
+      const raceCell = tr.querySelector('[data-race]');
+      if (r.kailey && r.austin) {
+        const label = document.createElement('label');
+        label.className = 'toggle';
+        label.innerHTML = `<input type="checkbox" ${isRace ? 'checked' : ''}><span class="toggle-track"></span>`;
+        const cb = label.querySelector('input');
+        cb.onchange = () => toggleRace(r, cb.checked, cb);
+        raceCell.appendChild(label);
+      } else {
+        raceCell.innerHTML = '<span style="color:var(--muted);font-size:11px;">—</span>';
+      }
       for (const kid of ['kailey', 'austin']) {
         const cell = tr.querySelector(`[data-kid="${kid}"]`);
         const variant = r[kid];
@@ -778,6 +799,23 @@
       }
       tbody.appendChild(tr);
     });
+  }
+
+  async function toggleRace(libRow, wantRace, cbEl) {
+    cbEl.disabled = true;
+    try {
+      const sharedId = wantRace ? crypto.randomUUID() : null;
+      const updates = [];
+      if (libRow.kailey) updates.push(sbPatch(`chore_menu?id=eq.${libRow.kailey.id}`, { shared_group_id: sharedId }));
+      if (libRow.austin) updates.push(sbPatch(`chore_menu?id=eq.${libRow.austin.id}`, { shared_group_id: sharedId }));
+      await Promise.all(updates);
+      await poll();
+    } catch (e) {
+      alert('Error: ' + e.message);
+      cbEl.checked = !wantRace;
+    } finally {
+      cbEl.disabled = false;
+    }
   }
 
   async function updateChorePrice(libRow, input) {
