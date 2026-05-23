@@ -628,6 +628,9 @@
         if (isYes) {
           const original = item.choreId.slice('pending-menu-'.length);
           await sbPatch(`chore_log?id=eq.${item.id}`, { chore_id: `menu-${original}` });
+          // Auto-deactivate the menu row so the kid can't tap it again today.
+          // Tomorrow the parent re-enables from the library if they want it offered.
+          await sbPatch(`chore_menu?id=eq.${original}`, { active: false });
         } else {
           await sbDelete(`chore_log?id=eq.${item.id}`);
         }
