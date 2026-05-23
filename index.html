@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Verwer Family Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f1f5f9;
+    --card:      #ffffff;
+    --ink:       #0f172a;
+    --muted:     #64748b;
+    --border:    #e2e8f0;
+    --indigo:    #4f46e5;
+    --indigo-light: #eef2ff;
+    --good:      #10b981;
+    --danger:    #ef4444;
+    --warn:      #f59e0b;
+    --pink:      #d97a92;
+    --pink-bg:   #fdf2f5;
+    --blue:      #1e4ea8;
+    --blue-bg:   #eaf2fb;
+    --shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.08), 0 5px 10px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.02em; }
+  h2 { font-size: 16px; font-weight: 700; margin: 0 0 12px; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .section { margin: 24px 0; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--indigo-light);
+    color: var(--indigo);
+  }
+  .pill.warn  { background: #fef3c7; color: #92400e; }
+  .pill.good  { background: #d1fae5; color: #065f46; }
+  .pill.danger{ background: #fee2e2; color: #991b1b; }
+  .pill.muted { background: #f1f5f9; color: var(--muted); }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .sync-indicator { font-size: 12px; color: var(--muted); }
+  .sync-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--good);
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .sync-dot.offline { background: var(--warn); }
+
+  /* Progress cards row */
+  .progress-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 720px) {
+    .progress-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .kid-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    border-top: 3px solid;
+  }
+  .kid-card.kailey { border-top-color: var(--pink); }
+  .kid-card.austin { border-top-color: var(--blue); }
+  .kid-card .kid-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat-cell {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .stat-num { font-size: 18px; font-weight: 700; line-height: 1.1; }
+  .stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+  .progress-bar {
+    background: var(--bg);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0 4px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--indigo), var(--good));
+    transition: width 0.4s ease;
+  }
+  .scooter-line {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .scooter-line strong { color: var(--ink); }
+
+  /* Approvals */
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+  }
+  .approval-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .approval-row:last-child { border-bottom: 0; }
+  .approval-info { flex: 1; min-width: 0; }
+  .approval-title { font-weight: 600; font-size: 14px; line-height: 1.3; }
+  .approval-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .approval-btns { display: flex; gap: 6px; }
+  .btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    background: var(--bg);
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--border); }
+  .btn:active { transform: scale(0.97); }
+  .btn.primary { background: var(--indigo); color: white; border-color: var(--indigo); }
+  .btn.primary:hover { background: #4338ca; }
+  .btn.good { background: var(--good); color: white; border-color: var(--good); }
+  .btn.danger { background: var(--danger); color: white; border-color: var(--danger); }
+  .btn.small { padding: 5px 10px; font-size: 12px; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 24px 12px;
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* Library table */
+  .library-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .library-controls input {
+    flex: 1;
+    min-width: 160px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .library-controls input:focus { outline: 2px solid var(--indigo); outline-offset: 1px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th {
+    text-align: left;
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  td.center { text-align: center; }
+  td.right { text-align: right; }
+  .chore-name-cell { font-weight: 500; }
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  .toggle input { display: none; }
+  .toggle-track {
+    width: 32px;
+    height: 18px;
+    background: var(--border);
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.15s;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle input:checked + .toggle-track { background: var(--good); }
+  .toggle input:checked + .toggle-track::after { transform: translateX(14px); }
+
+  /* Add chore form */
+  .add-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 120px 90px auto;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--bg);
+    border-radius: 8px;
+  }
+  @media (max-width: 720px) {
+    .add-row { grid-template-columns: 1fr 1fr; }
+  }
+  .add-row select,
+  .add-row input {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    background: white;
+  }
+
+  /* Quick actions */
+  .actions-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .penalty-btn {
+    background: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+  }
+  .penalty-btn:hover { background: #fee2e2; }
+
+  .footer { text-align: center; color: var(--muted); font-size: 11px; padding: 24px 0 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>👨‍👩‍👧‍👦 Verwer Family Dashboard</h1>
+    <div class="sub">Live view of Kailey + Austin's chore progress</div>
+  </div>
+  <div class="sync-indicator"><span class="sync-dot" id="syncDot"></span><span id="syncStatus">Loading…</span></div>
+</header>
+
+<!-- Progress cards -->
+<section class="section">
+  <div class="progress-grid">
+    <div class="kid-card kailey">
+      <div class="kid-name">👑 Kailey <span class="pill muted" id="kailey-pending-count"></span></div>
+      <div class="stat-row">
+        <div class="stat-cell"><div class="stat-num" id="kailey-morning">—</div><div class="stat-lbl">Morning</div></div>
+        <div class="stat-cell"><div class="stat-num" id="kailey-daytime">—</div><div class="stat-lbl">Daytime</div></div>
+        <div class="stat-cell"><div class="stat-num" id="kailey-today">$0</div><div class="stat-lbl">Today</div></div>
+        <div class="stat-cell"><div class="stat-num" id="kailey-fund">$0</div><div class="stat-lbl">Scooter</div></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="kailey-bar" style="width:0%"></div></div>
+      <div class="scooter-line"><span>Banwood Maxi · Pink</span><span><strong id="kailey-pct">0%</strong> of $159</span></div>
+    </div>
+    <div class="kid-card austin">
+      <div class="kid-name">⚔️ Austin <span class="pill muted" id="austin-pending-count"></span></div>
+      <div class="stat-row">
+        <div class="stat-cell"><div class="stat-num" id="austin-morning">—</div><div class="stat-lbl">Morning</div></div>
+        <div class="stat-cell"><div class="stat-num" id="austin-daytime">—</div><div class="stat-lbl">Daytime</div></div>
+        <div class="stat-cell"><div class="stat-num" id="austin-today">$0</div><div class="stat-lbl">Today</div></div>
+        <div class="stat-cell"><div class="stat-num" id="austin-fund">$0</div><div class="stat-lbl">Scooter</div></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="austin-bar" style="width:0%"></div></div>
+      <div class="scooter-line"><span>Micro Sprite · Sapphire</span><span><strong id="austin-pct">0%</strong> of $119.99</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Pending approvals -->
+<section class="section">
+  <div class="card">
+    <h2>⏳ Pending Approvals <span class="pill warn" id="approvals-badge" style="display:none"></span></h2>
+    <div id="approvals-list"><div class="empty">No pending requests. 🎉</div></div>
+  </div>
+</section>
+
+<!-- Quick actions -->
+<section class="section">
+  <div class="card">
+    <h2>⚡ Quick Actions</h2>
+    <div class="actions-row">
+      <button class="btn penalty-btn" onclick="issuePenalty('kailey')">−$1 Penalty · Kailey</button>
+      <button class="btn penalty-btn" onclick="issuePenalty('austin')">−$1 Penalty · Austin</button>
+    </div>
+  </div>
+</section>
+
+<!-- Chore library -->
+<section class="section">
+  <div class="card">
+    <h2>📚 Chore Library <span class="sub" id="library-count"></span></h2>
+    <div class="sub">Toggle a chore on/off to make it available to that kid today. Inactive chores stay in the library for future use.</div>
+
+    <div class="library-controls">
+      <input id="library-search" placeholder="Search chores…" oninput="renderLibrary()">
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Chore</th>
+          <th class="right">Price</th>
+          <th class="center">Kailey</th>
+          <th class="center">Austin</th>
+        </tr>
+      </thead>
+      <tbody id="library-body"></tbody>
+    </table>
+
+    <div class="add-row">
+      <input id="new-chore-name" placeholder="New chore name…">
+      <input id="new-chore-price" type="number" step="0.25" min="0.25" placeholder="Price ($)">
+      <select id="new-chore-kid">
+        <option value="both">Both kids</option>
+        <option value="kailey">Kailey only</option>
+        <option value="austin">Austin only</option>
+      </select>
+      <button class="btn primary" onclick="addChore()">+ Add</button>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  Polls Supabase every 5 seconds · <a href="https://kailey.clearrank.ai" target="_blank">kailey.clearrank.ai</a> · <a href="https://austin.clearrank.ai" target="_blank">austin.clearrank.ai</a>
+</div>
+
+</div>
+
+<script>
+  // ============= CONFIG =============
+  const SUPABASE_URL  = 'https://gpumiccbztdqsszqplhf.supabase.co';
+  const ANON_KEY      = 'sb_publishable_y_qNcwejAfm2Ewexz_KsOQ_3JWX7AuM';
+  // Secret key prompts on first visit and is stored in localStorage. Required
+  // for chore_menu writes + approval updates + penalties. Kept out of the repo
+  // so GitHub's secret scanning doesn't reject the push.
+  let SECRET_KEY = localStorage.getItem('sbSecret') || '';
+  if (!SECRET_KEY || !SECRET_KEY.startsWith('sb_secret_')) {
+    SECRET_KEY = prompt('Paste the Supabase secret key (sb_secret_...). Stored locally, only on this device.') || '';
+    if (SECRET_KEY) localStorage.setItem('sbSecret', SECRET_KEY);
+  }
+
+  const KIDS = {
+    kailey: { name: 'Kailey', rate: 8.00, scooter: 159.00 },
+    austin: { name: 'Austin', rate: 6.00, scooter: 119.99 }
+  };
+  const TITHE = 0.10, SAVINGS = 0.25, SCOOTER_PCT = 1 - TITHE - SAVINGS;
+
+  // Morning routine is identical for both kids
+  const MORNING_IDS = ['morning-bathroom','morning-brush','morning-prayers','morning-dressed','morning-breakfast','morning-scripture','morning-hair','morning-exercise','morning-bed','morning-room'];
+  const DAYTIME_IDS = {
+    kailey: ['daytime-lunch','daytime-pets','daytime-cat','daytime-dishes','daytime-clear-dinner'],
+    austin: ['daytime-lunch','daytime-walk-spot','daytime-walk-pedro','daytime-feed-spot','daytime-dishes','daytime-clear-dinner']
+  };
+
+  // Day rolls over at 10pm local — match kids' pages
+  function todayKey() {
+    const d = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function fmtMoney(n) { return '$' + n.toFixed(2); }
+
+  // ============= STATE =============
+  let log = { kailey: [], austin: [] };       // all chore_log rows
+  let menu = [];                              // all chore_menu rows (active + inactive)
+  let approvals = { kailey: [], austin: [] }; // unlock_approvals for today
+
+  // ============= API =============
+  const sbBase = SUPABASE_URL + '/rest/v1';
+  const anonHeaders   = { apikey: ANON_KEY,   Authorization: `Bearer ${ANON_KEY}` };
+  const secretHeaders = { apikey: SECRET_KEY, Authorization: `Bearer ${SECRET_KEY}` };
+
+  async function sbGet(path, useSecret = false) {
+    const r = await fetch(`${sbBase}/${path}`, { headers: useSecret ? secretHeaders : anonHeaders });
+    if (!r.ok) throw new Error(`GET ${path} ${r.status}`);
+    return r.json();
+  }
+  async function sbPost(path, body, extraPrefer = '') {
+    const headers = { ...secretHeaders, 'Content-Type': 'application/json',
+      Prefer: 'return=representation' + (extraPrefer ? ',' + extraPrefer : '') };
+    const r = await fetch(`${sbBase}/${path}`, { method: 'POST', headers, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`POST ${path} ${r.status}: ${await r.text()}`);
+    return r.json();
+  }
+  async function sbPatch(path, body) {
+    const r = await fetch(`${sbBase}/${path}`, {
+      method: 'PATCH',
+      headers: { ...secretHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(`PATCH ${path} ${r.status}`);
+  }
+  async function sbDelete(path) {
+    const r = await fetch(`${sbBase}/${path}`, { method: 'DELETE', headers: secretHeaders });
+    if (!r.ok) throw new Error(`DELETE ${path} ${r.status}`);
+  }
+
+  function setSync(state, text) {
+    document.getElementById('syncDot').classList.toggle('offline', state !== 'ok');
+    document.getElementById('syncStatus').textContent = text;
+  }
+
+  // ============= FETCH ALL =============
+  async function fetchAll() {
+    const today = todayKey();
+    const [allLog, allMenu, kAppr, aAppr] = await Promise.all([
+      sbGet('chore_log?select=*&order=completed_at.desc'),
+      sbGet('chore_menu?select=*&order=created_at.desc'),
+      sbGet(`unlock_approvals?select=*&kid=eq.kailey&approval_date=eq.${today}`),
+      sbGet(`unlock_approvals?select=*&kid=eq.austin&approval_date=eq.${today}`)
+    ]);
+    log.kailey = allLog.filter(r => r.kid === 'kailey').map(tagRow);
+    log.austin = allLog.filter(r => r.kid === 'austin').map(tagRow);
+    menu = allMenu;
+    approvals.kailey = kAppr;
+    approvals.austin = aAppr;
+  }
+
+  // Decode chore_id into row "type" flags
+  function tagRow(r) {
+    if (r.is_baseline) return r;
+    const id = r.chore_id || '';
+    if (id.startsWith('pending-menu-'))   { r.menu_id = id.slice(13); r.pending = true; }
+    else if (id.startsWith('menu-'))      { r.menu_id = id.slice(5);  r.pending = false; }
+    else if (id.startsWith('pending-reward-')) { r.reward_id = id.slice(15); r.pending = true;  r.is_reward = true; }
+    else if (id.startsWith('reward-'))         { r.reward_id = id.slice(7);  r.pending = false; r.is_reward = true; }
+    else if (id.startsWith('penalty-'))        { r.is_reward = true; r.is_penalty = true; r.pending = false; }
+    return r;
+  }
+
+  // ============= COMPUTE =============
+  function kidStats(kid) {
+    const today = todayKey();
+    const kLog = log[kid];
+    const todayLog = kLog.filter(r => r.log_date === today);
+    const todayBaseline = todayLog.filter(r => r.is_baseline);
+
+    const morningDone = MORNING_IDS.filter(id => todayBaseline.some(r => r.chore_id === id)).length;
+    const daytimeDone = DAYTIME_IDS[kid].filter(id => todayBaseline.some(r => r.chore_id === id)).length;
+    const daytimeTotal = DAYTIME_IDS[kid].length;
+
+    const todayPaid = todayLog.filter(r => !r.is_baseline);
+    const todayEarnedCents = todayPaid
+      .filter(r => !r.is_reward)
+      .reduce((s, r) => s + (r.pending ? 0 : (r.price_cents || 0)), 0);
+    const todayPendingCount = todayPaid.filter(r => r.pending).length;
+
+    const allEarnedCents = kLog
+      .filter(r => !r.is_baseline && !r.pending && !r.is_reward)
+      .reduce((s, r) => s + (r.price_cents || 0), 0);
+    const allSpentCents = kLog
+      .filter(r => r.is_reward && !r.pending)
+      .reduce((s, r) => s + (r.price_cents || 0), 0);
+    const totalScooter = (allEarnedCents / 100) * SCOOTER_PCT - (allSpentCents / 100);
+
+    return {
+      morning: `${morningDone}/${MORNING_IDS.length}`,
+      daytime: `${daytimeDone}/${daytimeTotal}`,
+      today: todayEarnedCents / 100,
+      fund: totalScooter,
+      pending: todayPendingCount,
+      pct: Math.max(0, Math.min(100, (totalScooter / KIDS[kid].scooter) * 100))
+    };
+  }
+
+  function renderProgress() {
+    for (const kid of ['kailey', 'austin']) {
+      const s = kidStats(kid);
+      document.getElementById(`${kid}-morning`).textContent = s.morning;
+      document.getElementById(`${kid}-daytime`).textContent = s.daytime;
+      document.getElementById(`${kid}-today`).textContent = fmtMoney(s.today);
+      document.getElementById(`${kid}-fund`).textContent = fmtMoney(s.fund);
+      document.getElementById(`${kid}-bar`).style.width = s.pct.toFixed(1) + '%';
+      document.getElementById(`${kid}-pct`).textContent = s.pct.toFixed(0) + '%';
+      const pendingEl = document.getElementById(`${kid}-pending-count`);
+      pendingEl.textContent = s.pending > 0 ? `${s.pending} pending` : '';
+      pendingEl.style.display = s.pending > 0 ? '' : 'none';
+    }
+  }
+
+  // ============= APPROVALS =============
+  function pendingItems() {
+    const items = [];
+    const today = todayKey();
+    for (const kid of ['kailey', 'austin']) {
+      // chore_log pending rows
+      for (const r of log[kid]) {
+        if (r.log_date !== today) continue;
+        if (r.is_baseline || !r.pending) continue;
+        const price = (r.price_cents / 100).toFixed(2);
+        if (r.is_reward) {
+          items.push({ kid, type: 'reward', id: r.id, title: `Wants to buy: ${r.chore_name}`, meta: `−$${price}`, choreId: r.chore_id });
+        } else {
+          items.push({ kid, type: 'paid', id: r.id, title: `Completed: ${r.chore_name}`, meta: `+$${price}`, choreId: r.chore_id });
+        }
+      }
+      // unlock_approvals pending rows
+      for (const a of approvals[kid]) {
+        if (a.status !== 'pending') continue;
+        items.push({ kid, type: 'unlock', id: a.id, title: `${a.stage === 'morning' ? 'Morning' : 'Daytime'} routine done — unlock paid chores?`, meta: a.stage, stage: a.stage });
+      }
+    }
+    return items;
+  }
+
+  function renderApprovals() {
+    const items = pendingItems();
+    const container = document.getElementById('approvals-list');
+    const badge = document.getElementById('approvals-badge');
+    if (items.length === 0) {
+      container.innerHTML = '<div class="empty">No pending requests. 🎉</div>';
+      badge.style.display = 'none';
+      return;
+    }
+    badge.style.display = '';
+    badge.textContent = `${items.length} waiting`;
+    container.innerHTML = '';
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'approval-row';
+      const kidPill = item.kid === 'kailey' ? '👑 Kailey' : '⚔️ Austin';
+      const typeLabel = item.type === 'reward' ? '🛍️ Reward' : item.type === 'paid' ? '💰 Paid Chore' : '🌅 Unlock';
+      div.innerHTML = `
+        <div class="approval-info">
+          <div class="approval-title">${item.title}</div>
+          <div class="approval-meta">${kidPill} · ${typeLabel} · ${item.meta}</div>
+        </div>
+        <div class="approval-btns">
+          <button class="btn good small">✓ YES</button>
+          <button class="btn danger small">✗ NO</button>
+        </div>
+      `;
+      const [yesBtn, noBtn] = div.querySelectorAll('.btn');
+      yesBtn.onclick = () => approveItem(item, true, yesBtn, noBtn);
+      noBtn.onclick  = () => approveItem(item, false, yesBtn, noBtn);
+      container.appendChild(div);
+    });
+  }
+
+  async function approveItem(item, isYes, yesBtn, noBtn) {
+    yesBtn.disabled = true; noBtn.disabled = true;
+    try {
+      if (item.type === 'paid') {
+        if (isYes) {
+          const original = item.choreId.slice('pending-menu-'.length);
+          await sbPatch(`chore_log?id=eq.${item.id}`, { chore_id: `menu-${original}` });
+        } else {
+          await sbDelete(`chore_log?id=eq.${item.id}`);
+        }
+      } else if (item.type === 'reward') {
+        if (isYes) {
+          const original = item.choreId.slice('pending-reward-'.length);
+          await sbPatch(`chore_log?id=eq.${item.id}`, { chore_id: `reward-${original}` });
+        } else {
+          await sbDelete(`chore_log?id=eq.${item.id}`);
+        }
+      } else if (item.type === 'unlock') {
+        if (isYes) {
+          await sbPatch(`unlock_approvals?id=eq.${item.id}`, { status: 'approved', responded_at: new Date().toISOString(), responder: 'dashboard' });
+        } else {
+          await sbPatch(`unlock_approvals?id=eq.${item.id}`, { status: 'denied', responded_at: new Date().toISOString(), responder: 'dashboard' });
+        }
+      }
+      await poll();
+    } catch (e) {
+      alert('Error: ' + e.message);
+      yesBtn.disabled = false; noBtn.disabled = false;
+    }
+  }
+
+  // ============= LIBRARY =============
+  // Each unique chore name → row showing active state per kid
+  function libraryRows() {
+    const byName = new Map();
+    for (const m of menu) {
+      const key = m.name.toLowerCase().trim();
+      if (!byName.has(key)) {
+        byName.set(key, { name: m.name, price: m.price_cents, kailey: null, austin: null });
+      }
+      const row = byName.get(key);
+      // Keep the most-recent active row per kid, else any row
+      const prev = row[m.kid];
+      if (!prev || (m.active && !prev.active) || (m.active && new Date(m.created_at) > new Date(prev.created_at))) {
+        row[m.kid] = m;
+      }
+      // Keep the latest price seen
+      if (!prev) row.price = m.price_cents;
+    }
+    return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  function renderLibrary() {
+    const search = document.getElementById('library-search').value.toLowerCase();
+    const rows = libraryRows().filter(r => r.name.toLowerCase().includes(search));
+    document.getElementById('library-count').textContent = `(${rows.length} chore${rows.length === 1 ? '' : 's'})`;
+    const tbody = document.getElementById('library-body');
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="center"><div class="empty">No chores match.</div></td></tr>';
+      return;
+    }
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="chore-name-cell">${r.name}</td>
+        <td class="right">$${(r.price/100).toFixed(2)}</td>
+        <td class="center" data-kid="kailey"></td>
+        <td class="center" data-kid="austin"></td>
+      `;
+      for (const kid of ['kailey', 'austin']) {
+        const cell = tr.querySelector(`[data-kid="${kid}"]`);
+        const variant = r[kid];
+        const isActive = variant && variant.active;
+        const label = document.createElement('label');
+        label.className = 'toggle';
+        label.innerHTML = `<input type="checkbox" ${isActive ? 'checked' : ''}><span class="toggle-track"></span>`;
+        const cb = label.querySelector('input');
+        cb.onchange = () => toggleLibrary(r, kid, cb.checked, cb);
+        cell.appendChild(label);
+      }
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function toggleLibrary(libRow, kid, wantActive, cbEl) {
+    cbEl.disabled = true;
+    try {
+      const variant = libRow[kid];
+      if (wantActive) {
+        if (variant) {
+          // Re-activate existing row
+          await sbPatch(`chore_menu?id=eq.${variant.id}`, { active: true });
+        } else {
+          // Create new row for this kid
+          await sbPost('chore_menu', { kid, name: libRow.name, price_cents: libRow.price });
+        }
+      } else if (variant) {
+        await sbPatch(`chore_menu?id=eq.${variant.id}`, { active: false });
+      }
+      await poll();
+    } catch (e) {
+      alert('Error: ' + e.message);
+      cbEl.checked = !wantActive;
+    } finally {
+      cbEl.disabled = false;
+    }
+  }
+
+  // ============= ADD CHORE =============
+  async function addChore() {
+    const name  = document.getElementById('new-chore-name').value.trim();
+    const price = parseFloat(document.getElementById('new-chore-price').value);
+    const kid   = document.getElementById('new-chore-kid').value;
+    if (!name || !price || price <= 0) { alert('Need a name and a positive price.'); return; }
+    const price_cents = Math.round(price * 100);
+    try {
+      if (kid === 'both') {
+        await Promise.all([
+          sbPost('chore_menu', { kid: 'kailey', name, price_cents }),
+          sbPost('chore_menu', { kid: 'austin', name, price_cents })
+        ]);
+      } else {
+        await sbPost('chore_menu', { kid, name, price_cents });
+      }
+      document.getElementById('new-chore-name').value  = '';
+      document.getElementById('new-chore-price').value = '';
+      await poll();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  // ============= PENALTY =============
+  async function issuePenalty(kid) {
+    const reason = prompt(`Penalty reason for ${KIDS[kid].name}?`, 'Penalty');
+    if (reason === null) return; // user cancelled
+    const choreName = reason.trim() ? `Penalty — ${reason.trim()}` : 'Penalty';
+    try {
+      await sbPost('chore_log', {
+        kid,
+        log_date: todayKey(),
+        chore_id: `penalty-${Date.now()}`,
+        chore_name: choreName,
+        is_baseline: false,
+        minutes: 0,
+        price_cents: 100
+      });
+      await poll();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  // ============= POLL =============
+  async function poll() {
+    try {
+      await fetchAll();
+      renderProgress();
+      renderApprovals();
+      renderLibrary();
+      setSync('ok', `Synced · ${new Date().toLocaleTimeString()}`);
+    } catch (e) {
+      console.error(e);
+      setSync('err', 'Sync paused — retrying');
+    }
+  }
+
+  poll();
+  setInterval(poll, 5000);
+</script>
+</body>
+</html>
